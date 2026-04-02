@@ -58,40 +58,6 @@ PHASE_OPTIONS = [
 
 STUDY_TYPE_OPTIONS = ["INTERVENTIONAL", "OBSERVATIONAL", "EXPANDED_ACCESS"]
 
-DARK_MODE_CSS = """
-<style>
-/* App background + text */
-[data-testid="stAppViewContainer"] {
-  background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
-  color: #e2e8f0;
-}
-[data-testid="stSidebar"] {
-  background: #0b1220;
-}
-h1, h2, h3, h4, h5, h6, p, label, div, span {
-  color: #e2e8f0 !important;
-}
-/* Inputs */
-.stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div,
-.stMultiSelect div[data-baseweb="select"] > div, .stDateInput input {
-  background-color: #111827 !important;
-  color: #e5e7eb !important;
-  border: 1px solid #334155 !important;
-}
-/* Cards / alerts */
-[data-testid="stMetric"] {
-  background: #111827;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 8px;
-}
-[data-testid="stExpander"] {
-  background: #111827;
-  border-radius: 10px;
-}
-</style>
-"""
-
 
 # -------------------------------
 # Helpers
@@ -389,9 +355,6 @@ with st.sidebar:
     st.markdown("---")
     with st.expander("Important Limitations & Fair-Use Notice", expanded=True):
         st.error(IMPORTANT_LIMITATIONS_TEXT)
-
-if dark_mode:
-    st.markdown(DARK_MODE_CSS, unsafe_allow_html=True)
 
 if reset:
     st.session_state.clear()

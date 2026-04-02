@@ -5,7 +5,6 @@ Interactive exploratory dashboard for the ClinicalTrials.gov v2 Data API:
 - Live filtering with API requests on each change
 - Summary cards, interactive table, chart suite, map, timeline, CSV export
 - Cursor pagination (`nextPageToken`) and bulk fetching workflow
-- Built-in dark mode toggle in the sidebar
 
 ## Quick Start
 
