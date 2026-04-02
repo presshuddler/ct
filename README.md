@@ -17,6 +17,37 @@ streamlit run app.py
 
 Open the local URL shown by Streamlit (usually `http://localhost:8501`).
 
+## Run in your browser directly from GitHub (no local install)
+
+### Option 1 (Recommended): Streamlit Community Cloud
+
+This is the easiest way to run the dashboard in a browser from a GitHub repo.
+
+1. Push this repository to GitHub (it already includes `app.py` + `requirements.txt`).
+2. Go to https://share.streamlit.io/
+3. Click **New app** and connect/select your GitHub repository.
+4. Set:
+   - **Branch**: your desired branch (e.g., `main`)
+   - **Main file path**: `app.py`
+5. Click **Deploy**.
+
+After deployment, Streamlit gives you a public URL you can open in any browser.
+
+### Option 2: GitHub Codespaces (browser IDE + terminal)
+
+If you prefer to run it yourself in a browser-hosted dev environment:
+
+1. Open the repo on GitHub.
+2. Click **Code** → **Codespaces** → **Create codespace on [branch]**.
+3. In the Codespaces terminal, run:
+   ```bash
+   pip install -r requirements.txt
+   streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+   ```
+4. Open the forwarded port URL that Codespaces shows.
+
+> Note: Codespaces still installs dependencies, but everything happens in the cloud (nothing local on your machine).
+
 ## Recommended manual test
 
 Use filters:
