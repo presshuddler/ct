@@ -304,6 +304,11 @@ st.title("🧪 ClinicalTrials.gov v2 Exploratory Dashboard")
 st.caption("Live explorer for https://clinicaltrials.gov/api/v2/studies")
 
 with st.sidebar:
+    dark_mode = st.toggle(
+        "Dark mode",
+        value=True,
+        help="Toggle dashboard dark styling for better low-light readability.",
+    )
     st.header("Filters")
     term = st.text_input("Free-text search (`query.term`)", help="Broad keyword search across study metadata.")
     cond = st.text_input("Condition (`query.cond`)", help="Condition-focused search query.")
