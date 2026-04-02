@@ -141,6 +141,50 @@ def parse_date_safe(date_str: Optional[str]) -> Optional[pd.Timestamp]:
         return None
 
 
+def is_dark_theme(theme_mode: str) -> bool:
+    return theme_mode == "Dark"
+
+
+def plotly_theme_layout(theme_mode: str) -> Dict[str, Any]:
+    dark = is_dark_theme(theme_mode)
+    if dark:
+        return {
+            "template": "plotly_dark",
+            "paper_bgcolor": "#0f172a",
+            "plot_bgcolor": "#0f172a",
+            "font": {"color": "#e2e8f0"},
+        }
+    return {
+        "template": "plotly_white",
+        "paper_bgcolor": "#ffffff",
+        "plot_bgcolor": "#ffffff",
+        "font": {"color": "#0f172a"},
+    }
+
+
+def style_altair_chart(chart: alt.Chart, theme_mode: str) -> alt.Chart:
+    dark = is_dark_theme(theme_mode)
+    if dark:
+        return chart.configure(
+            background="#0f172a"
+        ).configure_axis(
+            labelColor="#e2e8f0", titleColor="#e2e8f0", gridColor="#334155"
+        ).configure_title(
+            color="#e2e8f0"
+        ).configure_view(
+            strokeOpacity=0
+        )
+    return chart.configure(
+        background="#ffffff"
+    ).configure_axis(
+        labelColor="#0f172a", titleColor="#0f172a", gridColor="#e2e8f0"
+    ).configure_title(
+        color="#0f172a"
+    ).configure_view(
+        strokeOpacity=0
+    )
+
+
 def join_list(values: Optional[List[str]], top_n: Optional[int] = None) -> str:
     if not values:
         return ""
@@ -532,25 +576,27 @@ display_cols = [
 ]
 
 if HAS_AGGRID and not render_df.empty:
-    table_df = render_df[display_cols].copy()
-    gb = GridOptionsBuilder.from_dataframe(table_df)
-    gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
-    gb.configure_selection("single", use_checkbox=False)
-    gb.configure_default_column(filter=True, sortable=True, resizable=True)
-    grid = AgGrid(
-        table_df,
-        gridOptions=gb.build(),
-        height=350,
-        update_mode=GridUpdateMode.SELECTION_CHANGED,
-        fit_columns_on_grid_load=False,
-    )
-    selected = grid.get("selected_rows", [])
-    if selected:
-        selected_nct = selected[0].get("nctId")
-        match = render_df[render_df["nctId"] == selected_nct]
-        if not match.empty:
-            raw_obj = match.iloc[0]["raw"]
-            with st.expander(f"Study detail for {selected_nct}", expanded=True):
+    # Always render a stable Streamlit dataframe so the section never appears empty.
+    st.dataframe(render_df[display_cols], use_container_width=True, height=350)
+    with st.expander("AgGrid view (optional)", expanded=False):
+        table_df = render_df[display_cols].copy()
+        gb = GridOptionsBuilder.from_dataframe(table_df)
+        gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
+        gb.configure_selection("single", use_checkbox=False)
+        gb.configure_default_column(filter=True, sortable=True, resizable=True)
+        grid = AgGrid(
+            table_df,
+            gridOptions=gb.build(),
+            height=350,
+            update_mode=GridUpdateMode.SELECTION_CHANGED,
+            fit_columns_on_grid_load=False,
+        )
+        selected = grid.get("selected_rows", [])
+        if selected:
+            selected_nct = selected[0].get("nctId")
+            match = render_df[render_df["nctId"] == selected_nct]
+            if not match.empty:
+                raw_obj = match.iloc[0]["raw"]
                 st.markdown(f"[Open on ClinicalTrials.gov](https://clinicaltrials.gov/study/{selected_nct})")
                 st.json(raw_obj)
 elif not render_df.empty:
@@ -579,27 +625,38 @@ with left:
     if not render_df.empty:
         status_plot = render_df["overallStatus"].value_counts().reset_index()
         status_plot.columns = ["status", "count"]
-        st.plotly_chart(px.pie(status_plot, names="status", values="count", title="Study Status Distribution"), use_container_width=True)
+        fig_status = px.pie(status_plot, names="status", values="count", title="Study Status Distribution")
+        fig_status.update_layout(**plotly_theme_layout(theme_mode))
+        st.plotly_chart(fig_status, use_container_width=True)
 
         phase_plot = series_counter(render_df, "phase", top_n=12)
-        st.altair_chart(
+        phase_chart = (
             alt.Chart(phase_plot)
-            .mark_bar()
+            .mark_bar(color="#60a5fa" if is_dark_theme(theme_mode) else "#2563eb")
             .encode(x=alt.X("count:Q", title="Count"), y=alt.Y("value:N", sort="-x", title="Phase"), tooltip=["value", "count"])
-            .properties(title="Phase Breakdown"),
+            .properties(title="Phase Breakdown")
+        )
+        st.altair_chart(
+            style_altair_chart(phase_chart, theme_mode),
             use_container_width=True,
         )
 
 with right:
     sponsor_top = render_df[render_df["leadSponsor"] != ""]["leadSponsor"].value_counts().head(10).reset_index()
     sponsor_top.columns = ["sponsor", "count"]
-    st.plotly_chart(px.bar(sponsor_top, x="count", y="sponsor", orientation="h", title="Top 10 Sponsors"), use_container_width=True)
+    fig_sponsor = px.bar(sponsor_top, x="count", y="sponsor", orientation="h", title="Top 10 Sponsors", color="count", color_continuous_scale="Blues")
+    fig_sponsor.update_layout(**plotly_theme_layout(theme_mode))
+    st.plotly_chart(fig_sponsor, use_container_width=True)
 
     cond_top = series_counter(render_df, "conditions", top_n=10)
-    st.plotly_chart(px.bar(cond_top, x="count", y="value", orientation="h", title="Top 10 Conditions"), use_container_width=True)
+    fig_cond = px.bar(cond_top, x="count", y="value", orientation="h", title="Top 10 Conditions", color="count", color_continuous_scale="Viridis")
+    fig_cond.update_layout(**plotly_theme_layout(theme_mode))
+    st.plotly_chart(fig_cond, use_container_width=True)
 
 intervention_top = series_counter(render_df, "interventions", top_n=10)
-st.plotly_chart(px.bar(intervention_top, x="count", y="value", orientation="h", title="Top 10 Interventions"), use_container_width=True)
+fig_intr = px.bar(intervention_top, x="count", y="value", orientation="h", title="Top 10 Interventions", color="count", color_continuous_scale="Plasma")
+fig_intr.update_layout(**plotly_theme_layout(theme_mode))
+st.plotly_chart(fig_intr, use_container_width=True)
 
 # Timeline
 if not render_df.empty:
@@ -608,7 +665,7 @@ if not render_df.empty:
     timeline = timeline.dropna(subset=["firstPostedParsed"])
     if not timeline.empty:
         st.plotly_chart(
-            px.histogram(timeline, x="firstPostedParsed", nbins=40, title="Studies by First Posted Date"),
+            px.histogram(timeline, x="firstPostedParsed", nbins=40, title="Studies by First Posted Date").update_layout(**plotly_theme_layout(theme_mode)),
             use_container_width=True,
         )
 
@@ -640,7 +697,7 @@ if not render_df.empty:
                 color="count",
                 title="Study Locations by Country",
                 color_continuous_scale="Viridis",
-            ),
+            ).update_layout(**plotly_theme_layout(theme_mode)),
             use_container_width=True,
         )
 
