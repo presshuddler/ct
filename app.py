@@ -58,6 +58,71 @@ PHASE_OPTIONS = [
 
 STUDY_TYPE_OPTIONS = ["INTERVENTIONAL", "OBSERVATIONAL", "EXPANDED_ACCESS"]
 
+DARK_MODE_CSS = """
+<style>
+/* App background + text */
+[data-testid="stAppViewContainer"] {
+  background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+  color: #e2e8f0;
+}
+[data-testid="stSidebar"] {
+  background: #0b1220;
+}
+h1, h2, h3, h4, h5, h6, p, label, div, span {
+  color: #e2e8f0 !important;
+}
+/* Inputs */
+.stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div,
+.stMultiSelect div[data-baseweb="select"] > div, .stDateInput input {
+  background-color: #111827 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #334155 !important;
+}
+/* Cards / alerts */
+[data-testid="stMetric"] {
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px;
+}
+[data-testid="stExpander"] {
+  background: #111827;
+  border-radius: 10px;
+}
+</style>
+"""
+
+LIGHT_MODE_CSS = """
+<style>
+[data-testid="stAppViewContainer"] {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  color: #0f172a;
+}
+[data-testid="stSidebar"] {
+  background: #ffffff;
+}
+h1, h2, h3, h4, h5, h6, p, label, div, span {
+  color: #0f172a !important;
+}
+.stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div,
+.stMultiSelect div[data-baseweb="select"] > div, .stDateInput input {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+[data-testid="stMetric"] {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 8px;
+}
+[data-testid="stExpander"] {
+  background: #ffffff;
+  border-radius: 10px;
+}
+</style>
+"""
+
 
 # -------------------------------
 # Helpers
@@ -304,10 +369,12 @@ st.title("🧪 ClinicalTrials.gov v2 Exploratory Dashboard")
 st.caption("Live explorer for https://clinicaltrials.gov/api/v2/studies")
 
 with st.sidebar:
-    dark_mode = st.toggle(
-        "Dark mode",
-        value=True,
-        help="Toggle dashboard dark styling for better low-light readability.",
+    theme_mode = st.radio(
+        "Theme mode",
+        options=["Dark", "Light"],
+        index=0,
+        horizontal=True,
+        help="Switch between dark and light dashboard themes.",
     )
     st.header("Filters")
     term = st.text_input("Free-text search (`query.term`)", help="Broad keyword search across study metadata.")
@@ -355,6 +422,11 @@ with st.sidebar:
     st.markdown("---")
     with st.expander("Important Limitations & Fair-Use Notice", expanded=True):
         st.error(IMPORTANT_LIMITATIONS_TEXT)
+
+if theme_mode == "Dark":
+    st.markdown(DARK_MODE_CSS, unsafe_allow_html=True)
+else:
+    st.markdown(LIGHT_MODE_CSS, unsafe_allow_html=True)
 
 if reset:
     st.session_state.clear()
